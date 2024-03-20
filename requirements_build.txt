@@ -1,0 +1,5 @@
+# py3.11.2
+bentoml[io-image]==1.2.7
+keras==2.*
+tensorflow==2.15.* # only cpu version required
+huggingface-hub[tensorflow]

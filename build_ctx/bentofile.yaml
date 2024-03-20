@@ -1,0 +1,15 @@
+service: "service:ImageTagging"  # Same as the argument passed to `bentoml serve`
+labels:
+   owner: remy-team 
+   stage: dev
+include:
+- "service.py"  # A pattern for matching which files to include in the Bento
+- "tags.csv"
+python:
+   packages:  # Additional pip packages required by the Service
+   - tensorflow==2.15.*
+   - keras==2.*
+   - Pillow
+models: # The model to be used for building the Bento.
+- wd14-remy:latest
+

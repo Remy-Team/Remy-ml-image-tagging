@@ -1,0 +1,16 @@
+version: '3.8'
+services: 
+  image_tagging:
+    image: image_tagging:0.1
+    ports:
+      - 3000:3000
+    environment:
+      - NUM_WORKERS=5
+      - CPUS_PER_WORKER=1
+      - BATCH_SIZE=8
+    deploy:
+      resources:
+        limits:
+          cpus: '5'
+          memory: 10G
+
