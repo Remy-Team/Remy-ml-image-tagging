@@ -7,9 +7,15 @@ include:
 - "tags.csv"
 python:
    packages:  # Additional pip packages required by the Service
-   - tensorflow==2.15.*
+   - tensorflow==2.15
+   - nvidia-cuda-nvcc-cu12==12.*
    - keras==2.*
    - Pillow
 models: # The model to be used for building the Bento.
 - wd14-remy:latest
+docker:
+  distro: debian 
+  python_version: "3.10.12"
+  cuda_version: "12"
+
 

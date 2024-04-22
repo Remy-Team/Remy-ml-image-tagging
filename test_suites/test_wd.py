@@ -67,7 +67,7 @@ if __name__ == "__main__":
         for img_name in os.listdir(config["test_images_dir"])
         if img_name.endswith(".jpg")
     ]
-    image_multiplier = 5  # Increase for benchmarking testing ~2im/s on well cooled cpu 8 core, recommend trying out onnx
+    image_multiplier = 500  # Increase for benchmarking testing ~2im/s on well cooled cpu 8 core, recommend trying out onnx
     test_images_paths *= image_multiplier
 
     test_images = test_images_paths.copy()
@@ -75,10 +75,12 @@ if __name__ == "__main__":
     assert len(test_images) != 0
 
     print("Loading model...")
+
     model = load_keras_tagger_hf(config["tagger"])
     proba_to_tag = load_proba_to_tag(config["proba_to_tag_csv"])
     input_shape = model.input_shape[1:3]
     output_shape = model.output_shape
+
     print(f"Model input shape: {input_shape}")
     print(f"Model output shape: {output_shape}")
 
