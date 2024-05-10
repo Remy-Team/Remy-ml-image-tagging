@@ -6,11 +6,9 @@ import numpy as np
 from keras.preprocessing import image
 from huggingface_hub import from_pretrained_keras
 
-
 def load_keras_tagger_hf(tagger):
     model = from_pretrained_keras(tagger, compile=False)
     return model
-
 
 def load_image(img_path, target_size):
     print(f"Loading {img_path}...")

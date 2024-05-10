@@ -1,19 +1,18 @@
-version: '3.8'
 services: 
   image_tagging:
-    image: image_tagging:0.6
+    image: image_tagging:0.7
     ports:
       - 3000:3000
     environment:
       - NUM_WORKERS=1
       - CPUS_PER_WORKER=2
-      - BATCH_SIZE=16
-      # - ENABLE_GPU=1
+      - BATCH_SIZE=12
+      - BATCH_TIMEOUT=20000
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 8G
+          cpus: '12'
+          memory: 30G
         reservations:
           devices:
             - driver: nvidia

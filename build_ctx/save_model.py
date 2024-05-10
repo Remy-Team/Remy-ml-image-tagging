@@ -14,7 +14,6 @@ def load_keras_tagger_hf(tagger):
 
 
 if __name__ == "__main__":
-    # TODO: change to build config
     tagger = "SmilingWolf/wd-v1-4-convnext-tagger-v2"
     model = load_keras_tagger_hf(tagger)
 

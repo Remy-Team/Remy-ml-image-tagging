@@ -44,7 +44,7 @@ python save_model.py
 3. Build container via bentoml
 
 ```bash
-bentoml build --containerize --version 0.1
+bentoml build --containerize --version 0.6
 ```
 
 Output should end with 
