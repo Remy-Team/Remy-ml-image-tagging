@@ -3,3 +3,4 @@ xdist
 pytest-asyncio
 aiohttp
 requests
+locust

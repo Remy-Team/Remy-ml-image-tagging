@@ -5,14 +5,14 @@ services:
       - 3000:3000
     environment:
       - NUM_WORKERS=1
-      - CPUS_PER_WORKER=2
-      - BATCH_SIZE=12
-      - BATCH_TIMEOUT=20000
+      - CPUS_PER_WORKER=8
+      - BATCH_SIZE=100
+      - BATCH_TIMEOUT=200000
     deploy:
       resources:
         limits:
-          cpus: '12'
-          memory: 30G
+          cpus: '8'
+          memory: 20G
         reservations:
           devices:
             - driver: nvidia

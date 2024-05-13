@@ -4,8 +4,8 @@ import aiohttp
 import asyncio
 import requests
 
-from settings import SERIVCE_ENDPOINT_URL
-from fixtures import * #noqa
+from tests.settings import SERIVCE_ENDPOINT_URL
+from tests.fixtures import * #noqa
 
 def requests_infer_tags_from_image(image_path) -> requests.Response:
     """Sends a single image for inference to ML service"""
