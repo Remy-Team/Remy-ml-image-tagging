@@ -1,5 +1,7 @@
 # Remy - ML Tagging service 
 
+![demo.gif](docs/figures/demo.gif)
+
 ## General info
 
 The repo is based on [SmilingWolf/wd-v1-4-convnext-tagger-v2](https://huggingface.co/SmilingWolf/wd-v1-4-convnext-tagger-v2) model.
