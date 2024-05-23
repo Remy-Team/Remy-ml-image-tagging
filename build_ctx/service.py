@@ -1,16 +1,21 @@
+"""Bentoml service for tagging code"""
+
 import os
 import csv
+from functools import partial
+import typing as tp
+
 
 import numpy as np
 import keras
-import typing as tp
 import bentoml
 from PIL.Image import Image as PILImage
 
 
 def read_csv(file_path):
+    """Reads csv columnwise"""
     data = {}
-    with open(file_path, "r") as csv_file:
+    with open(file_path, "r", encoding='utf-8') as csv_file:
         csv_reader = csv.reader(csv_file)
         headers = next(csv_reader)
         for header in headers:
@@ -22,16 +27,21 @@ def read_csv(file_path):
 
 
 def load_proba_to_tag(csv_tags="tags.csv"):
+    """Load dictionary to convert indexes to tags"""
     read_columns = read_csv(csv_tags)
     return {
         k: (v[0], v[1])
         for k, v in enumerate(zip(read_columns["name"], read_columns["category"]))
     }
 
+
 def indices_above_threshold(lst, threshold):
+    """Returns a list of indexes based on probas"""
     return [index for index, element in enumerate(lst) if element > threshold]
 
+
 def probs_to_tags_rating(probs, threshold: float, proba_to_tag: dict) -> list:
+    """Parses probas and returns tags and image rating"""
     classes_nums = indices_above_threshold(probs, threshold)
     classes = list(map(lambda x: proba_to_tag[x], classes_nums))
     tags = []
@@ -44,11 +54,14 @@ def probs_to_tags_rating(probs, threshold: float, proba_to_tag: dict) -> list:
             tags.append(name)
     return tags, rating
 
+
 def preprocess_img(img, img_dim):
+    """Preprocesses an image before inference"""
     img = img.resize((img_dim, img_dim))
     arr = np.array(img, dtype=np.float64)
     arr = arr[..., :3]
     return arr
+
 
 THRESHOLD = 0.5
 MODEL_TAG = "wd14-remy"
@@ -59,11 +72,13 @@ CPUS_PER_WORKER = os.getenv("CPUS_PER_WORKER", "1")
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "8"))
 BATCH_TIMEOUT = int(os.getenv("BATCH_TIMEOUT", "20000"))
 
+
 @bentoml.service(
     workers="cpu_count" if WORKERS == -1 else WORKERS,
     resources={"cpu": CPUS_PER_WORKER, "memory": "2Gi"},
 )
 class ImageTagging:
+    """BentoML Service class for tagging images"""
     model_ref = bentoml.keras.get(f"{MODEL_TAG}:latest")
 
     def __init__(self) -> None:
@@ -71,11 +86,17 @@ class ImageTagging:
         self.model: keras.Model = self.model_ref.load_model()
         self.threshold = THRESHOLD
         self.img_dim = IMG_DIM
-        print(f"Service initialized successfully")
+        print("Service initialized successfully")
 
-    @bentoml.api(batchable=True, max_batch_size=BATCH_SIZE, max_latency_ms=BATCH_TIMEOUT, batch_dim=0)
+    @bentoml.api(
+        batchable=True,
+        max_batch_size=BATCH_SIZE,
+        max_latency_ms=BATCH_TIMEOUT,
+        batch_dim=0,
+    )
     def predict(self, imgs: tp.List[PILImage]) -> tp.List[dict]:
-        load_f = lambda x: preprocess_img(x, IMG_DIM)
+        """Predicts tags for an image"""
+        load_f = partial(preprocess_img, img_dim=IMG_DIM)
         imgs = list(map(load_f, imgs))
         imgs = np.array(imgs)
 

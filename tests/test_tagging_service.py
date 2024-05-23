@@ -1,41 +1,43 @@
 """Tests for ML tagging service deployed via BentoML"""
+import asyncio
 
 import aiohttp
-import asyncio
 import requests
 
 from tests.settings import SERIVCE_ENDPOINT_URL
-from tests.fixtures import * #noqa
 
 def requests_infer_tags_from_image(image_path) -> requests.Response:
     """Sends a single image for inference to ML service"""
-    headers = {'accept': 'application/json'}
-    files = {
-        'imgs': ('image.jpg', open(image_path, 'rb'), 'image/jpeg'),
-    }
-    request_url = f'{SERIVCE_ENDPOINT_URL}/predict'
-    response = requests.post(request_url, headers=headers, files=files)
+    headers = {"accept": "application/json"}
+    with open(image_path, "rb") as f:
+        files = {
+            "imgs": ("image.jpg", f, "image/jpeg"),
+        }
+        request_url = f"{SERIVCE_ENDPOINT_URL}/predict"
+        response = requests.post(request_url, headers=headers, files=files)
     return response
+
 
 async def aiohttp_infer_tags_from_image(image_path):
     """Sends a single image for inference to ML service asynchronously"""
-    headers = {'accept': 'application/json'}
+    headers = {"accept": "application/json"}
     data = aiohttp.FormData()
     data.add_field(
-        'imgs',
-        open(image_path, 'rb'),
-        filename='image.jpg',
-        content_type='image/jpeg'
+        "imgs", open(image_path, "rb"), filename="image.jpg", content_type="image/jpeg"
     )
     async with aiohttp.ClientSession(base_url=SERIVCE_ENDPOINT_URL) as session:
-        async with session.post('/predict', headers=headers, data=data, timeout=60) as response:
+        async with session.post(
+            "/predict", headers=headers, data=data, timeout=60
+        ) as response:
             return await response.json()
 
+
 def requests_get_livez():
-    headers = {'accept': '*/*'}
-    request_url = f'{SERIVCE_ENDPOINT_URL}/livez'
+    headers = {"accept": "*/*"}
+    request_url = f"{SERIVCE_ENDPOINT_URL}/livez"
     response = requests.get(request_url, headers=headers)
     return response
+
 
 class TestTaggingService:
     def test_service_is_up(self):
@@ -45,7 +47,7 @@ class TestTaggingService:
         """
         response = requests_get_livez()
         assert response.status_code == 200, response.content
-    
+
     @staticmethod
     def _assert_correct_prediction_response_json(data: dict):
         assert isinstance(data, list), data
@@ -53,9 +55,9 @@ class TestTaggingService:
         prediction = data[0]
         required_keys = ["message", "rating", "tags"]
         assert set(prediction.keys()) == set(required_keys)
-        assert prediction['message'] == 'Success!'
-        assert isinstance(prediction['rating'], str)
-        assert isinstance(prediction['tags'], list)
+        assert prediction["message"] == "Success!"
+        assert isinstance(prediction["rating"], str)
+        assert isinstance(prediction["tags"], list)
 
     @staticmethod
     def _assert_correct_single_prediction_response_requests(response):
@@ -66,10 +68,10 @@ class TestTaggingService:
 
     def test_single_image_inference(self, sample_image_path):
         """
-        Checks if service is working 
+        Checks if service is working
         when asking to inference a single image
         Expectation: 200 status code and correct response format
-        
+
         Example response:
         [
             {
@@ -87,10 +89,9 @@ class TestTaggingService:
         response = requests_infer_tags_from_image(sample_image_path)
         TestTaggingService._assert_correct_single_prediction_response_requests(response)
 
-
     async def test_parallel_image_inference(self, sample_images_paths):
         """
-        Checks if service is working 
+        Checks if service is working
         when asking to inference multiple images using
         diffrent requests
         Expectation: 200 status code and correct response format
@@ -105,7 +106,3 @@ class TestTaggingService:
         response_jsons = await asyncio.gather(*futures)
         for response_json in response_jsons:
             TestTaggingService._assert_correct_prediction_response_json(response_json)
-
-        
-
-
