@@ -4,12 +4,16 @@ import os
 import csv
 from functools import partial
 import typing as tp
+import io
+import asyncio
+import tempfile
 
 
+import requests
 import numpy as np
 import keras
 import bentoml
-from PIL.Image import Image as PILImage
+from PIL import Image
 
 
 def read_csv(file_path):
@@ -41,7 +45,7 @@ def indices_above_threshold(lst, threshold):
 
 
 def probs_to_tags_rating(probs, threshold: float, proba_to_tag: dict) -> list:
-    """Parses probas and returns tags and image rating"""
+    """Parses probas and returns tags and Image.Image rating"""
     classes_nums = indices_above_threshold(probs, threshold)
     classes = list(map(lambda x: proba_to_tag[x], classes_nums))
     tags = []
@@ -56,12 +60,33 @@ def probs_to_tags_rating(probs, threshold: float, proba_to_tag: dict) -> list:
 
 
 def preprocess_img(img, img_dim):
-    """Preprocesses an image before inference"""
+    """Preprocesses an Image.Image before inference"""
     img = img.resize((img_dim, img_dim))
     arr = np.array(img, dtype=np.float64)
     arr = arr[..., :3]
     return arr
 
+async def download_image(url: str) -> Image.Image | str:
+    with tempfile.SpooledTemporaryFile(max_size=1e9) as buffer:
+        try:
+            r = requests.get(url, stream=True)
+            if r.status_code == 200:
+                downloaded = 0
+                for chunk in r.iter_content(chunk_size=1024):
+                    downloaded += len(chunk)
+                    buffer.write(chunk)
+                buffer.seek(0)
+                return Image.open(io.BytesIO(buffer.read()))
+            else:
+                raise Exception(f"Non-200 status code: {r.status_code}")
+        except Exception as e:
+            text = f"Failed to download the Image.Image. Reason: {e=}"
+            print(text)
+            return text
+
+async def urls_to_imgs(urls: tp.List[str]) -> tp.List[Image.Image | str]:
+    futures = list(map(download_image, urls))
+    return await asyncio.gather(*futures)
 
 THRESHOLD = 0.5
 MODEL_TAG = "wd14-remy"
@@ -78,7 +103,7 @@ BATCH_TIMEOUT = int(os.getenv("BATCH_TIMEOUT", "20000"))
     resources={"cpu": CPUS_PER_WORKER, "memory": "2Gi"},
 )
 class ImageTagging:
-    """BentoML Service class for tagging images"""
+    """BentoML Service class for tagging Image.Images"""
     model_ref = bentoml.keras.get(f"{MODEL_TAG}:latest")
 
     def __init__(self) -> None:
@@ -88,14 +113,8 @@ class ImageTagging:
         self.img_dim = IMG_DIM
         print("Service initialized successfully")
 
-    @bentoml.api(
-        batchable=True,
-        max_batch_size=BATCH_SIZE,
-        max_latency_ms=BATCH_TIMEOUT,
-        batch_dim=0,
-    )
-    def predict(self, imgs: tp.List[PILImage]) -> tp.List[dict]:
-        """Predicts tags for an image"""
+    def _infer_imgs_list(self, imgs: tp.List[Image.Image]) -> tp.List[dict]:
+        """Predicts tags for an Image.Image"""
         load_f = partial(preprocess_img, img_dim=IMG_DIM)
         imgs = list(map(load_f, imgs))
         imgs = np.array(imgs)
@@ -106,7 +125,9 @@ class ImageTagging:
         for probs in preds:
             # Tagger specific
             tags, rating = probs_to_tags_rating(
-                probs, threshold=self.threshold, proba_to_tag=self.proba_to_tag
+                probs,
+                threshold=self.threshold,
+                proba_to_tag=self.proba_to_tag
             )
             result = {
                 "message": "Success!",
@@ -115,3 +136,43 @@ class ImageTagging:
             }
             results.append(result)
         return results
+
+    @bentoml.api(
+        batchable=True,
+        max_batch_size=BATCH_SIZE,
+        max_latency_ms=BATCH_TIMEOUT,
+        batch_dim=0,
+    )
+    def predict(self, imgs: tp.List[Image.Image]) -> tp.List[dict]:
+        """For testing purposes"""
+        return self._infer_imgs_list(imgs)
+
+    def process_images_and_errors(self, imgs_and_errors: tp.List[Image.Image | str]):
+        images = [im for im in imgs_and_errors if isinstance(im, Image.Image)]
+        results_images = self._infer_imgs_list(images) if images else []
+        results_images_i = 0
+        results = []
+        for el in imgs_and_errors:
+            if isinstance(el, str):
+                result = {
+                    "message": el,
+                    "rating": None,
+                    "tags": None,
+                }
+            elif isinstance(el, Image.Image):
+                result = results_images[results_images_i]
+                results_images_i += 1
+            else:
+                result = {}
+            results.append(result)
+        return results
+
+    @bentoml.api(
+        batchable=True,
+        max_batch_size=BATCH_SIZE,
+        max_latency_ms=BATCH_TIMEOUT,
+        batch_dim=0,
+    )
+    async def download_and_predict(self, imgs_url: tp.List[str]) -> tp.List[dict]:
+        imgs_and_errors = await urls_to_imgs(imgs_url)
+        return self.process_images_and_errors(imgs_and_errors)

@@ -4,7 +4,7 @@ import asyncio
 import aiohttp
 import requests
 
-from tests.settings import SERIVCE_ENDPOINT_URL
+from settings import SERIVCE_ENDPOINT_URL
 
 def requests_infer_tags_from_image(image_path) -> requests.Response:
     """Sends a single image for inference to ML service"""
@@ -16,6 +16,13 @@ def requests_infer_tags_from_image(image_path) -> requests.Response:
         request_url = f"{SERIVCE_ENDPOINT_URL}/predict"
         response = requests.post(request_url, headers=headers, files=files)
     return response
+
+def requests_infer_tags_from_image_download(image_url) -> requests.Response:
+    """Sends a single image for inference to ML service"""
+    headers = {"accept": "application/json", 'Content-Type': 'application/json'}
+    json_data = {'imgs_url': [image_url]}
+    request_url = f"{SERIVCE_ENDPOINT_URL}/download_and_predict"
+    return requests.post(request_url, headers=headers, json=json_data)
 
 
 async def aiohttp_infer_tags_from_image(image_path):
@@ -88,6 +95,30 @@ class TestTaggingService:
         """
         response = requests_infer_tags_from_image(sample_image_path)
         TestTaggingService._assert_correct_single_prediction_response_requests(response)
+
+    def test_single_image_download_inference(self, sample_image_url):
+        """
+        Checks if service is working
+        when asking to inference a single image
+        Expectation: 200 status code and correct response format
+
+        Example response:
+        [
+            {
+                "message": "Success!",
+                "rating": "general",
+                "tags": [
+                "comic",
+                "english_text",
+                "no_humans",
+                "text_focus"
+                ]
+            }
+        ]
+        """
+        response = requests_infer_tags_from_image_download(sample_image_url)
+        TestTaggingService._assert_correct_single_prediction_response_requests(response)
+
 
     async def test_parallel_image_inference(self, sample_images_paths):
         """
