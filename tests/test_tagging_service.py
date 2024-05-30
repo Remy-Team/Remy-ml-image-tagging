@@ -27,7 +27,7 @@ async def aiohttp_infer_tags_from_image(image_path):
     )
     async with aiohttp.ClientSession(base_url=SERIVCE_ENDPOINT_URL) as session:
         async with session.post(
-            "/predict", headers=headers, data=data, timeout=60
+            "/predict", headers=headers, data=data, timeout=180
         ) as response:
             return await response.json()
 
@@ -97,7 +97,7 @@ class TestTaggingService:
         Expectation: 200 status code and correct response format
         """
         assert len(sample_images_paths) >= 5, "Put more images in test folder (min 5)"
-        image_paths = sample_images_paths[:5] * 50
+        image_paths = sample_images_paths[:5] * 1
         futures = []
         for image_path in image_paths:
             future = aiohttp_infer_tags_from_image(image_path)

@@ -46,7 +46,11 @@ python save_model.py
 3. Build container via bentoml
 
 ```bash
-bentoml build --containerize --version 0.6
+# cuda version
+bentoml build -f bentofile.yaml --containerize --version 0.7
+
+# cpu version
+bentoml build -f bentofile_cpu.yaml --containerize --version 0.7-cpu
 ```
 
 Output should end with 

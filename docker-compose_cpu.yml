@@ -1,0 +1,25 @@
+services: 
+  tagging:
+    image: image_tagging:0.7-cpu
+    ports:
+      - 3000:3000
+    environment:
+      - NUM_WORKERS=2
+      - CPUS_PER_WORKER=1
+      - BATCH_SIZE=4
+      - BATCH_TIMEOUT=300000
+    deploy:
+      resources:
+        limits:
+          # Scale NUM_WORKERS and increase CPUS 1 per WORKER, MEMORY 2Gb per worker
+          cpus: '2'
+          memory: 4G
+
+  tagging-ui:
+    build: tagging-ui
+    ports:
+      - 80:80
+    environment:
+      IMAGE_TAGGING_ENDPOINT: http://tagging:3000/predict
+    
+
