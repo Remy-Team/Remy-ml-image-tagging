@@ -12,6 +12,7 @@ class ImageTaggingUser(HttpUser):
     """Class for workload simulation"""
 
     wait_time = between(1, 3)
+
     def _send_infer_request(self, image_path):
         """Sends a single image for inference to ML service"""
         headers = {"accept": "application/json"}

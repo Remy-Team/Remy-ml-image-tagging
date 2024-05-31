@@ -19,7 +19,7 @@ from PIL import Image
 def read_csv(file_path):
     """Reads csv columnwise"""
     data = {}
-    with open(file_path, "r", encoding='utf-8') as csv_file:
+    with open(file_path, "r", encoding="utf-8") as csv_file:
         csv_reader = csv.reader(csv_file)
         headers = next(csv_reader)
         for header in headers:
@@ -66,6 +66,7 @@ def preprocess_img(img, img_dim):
     arr = arr[..., :3]
     return arr
 
+
 async def download_image(url: str) -> Image.Image | str:
     with tempfile.SpooledTemporaryFile(max_size=1e9) as buffer:
         try:
@@ -84,9 +85,11 @@ async def download_image(url: str) -> Image.Image | str:
             print(text)
             return text
 
+
 async def urls_to_imgs(urls: tp.List[str]) -> tp.List[Image.Image | str]:
     futures = list(map(download_image, urls))
     return await asyncio.gather(*futures)
+
 
 THRESHOLD = 0.5
 MODEL_TAG = "wd14-remy"
@@ -104,6 +107,7 @@ BATCH_TIMEOUT = int(os.getenv("BATCH_TIMEOUT", "20000"))
 )
 class ImageTagging:
     """BentoML Service class for tagging Image.Images"""
+
     model_ref = bentoml.keras.get(f"{MODEL_TAG}:latest")
 
     def __init__(self) -> None:
@@ -125,9 +129,7 @@ class ImageTagging:
         for probs in preds:
             # Tagger specific
             tags, rating = probs_to_tags_rating(
-                probs,
-                threshold=self.threshold,
-                proba_to_tag=self.proba_to_tag
+                probs, threshold=self.threshold, proba_to_tag=self.proba_to_tag
             )
             result = {
                 "message": "Success!",

@@ -1,6 +1,6 @@
-services: 
+services:
   tagging:
-    image: image_tagging:0.13
+    image: image_tagging:0.7
     ports:
       - 3000:3000
     environment:
@@ -24,5 +24,43 @@ services:
       - 80:80
     environment:
       IMAGE_TAGGING_ENDPOINT: http://tagging:3000/predict
-    
 
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    ports:
+      - 15672:15672
+      - 5672:5672
+    restart: always
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=rmuser
+      - RABBITMQ_DEFAULT_PASS=rmpassword
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+
+  tagging-queue:
+    build: tagging-queue
+    ports:
+      - 5000:80
+    depends_on:
+      - rabbitmq
+    environment:
+      - PIKA_HOST=rabbitmq
+      - PIKA_PORT=5672
+      - PIKA_USER=rmuser
+      - PIKA_PASS=rmpassword
+
+  tagging-queue-worker:
+    build: tagging-queue-worker
+    environment:
+      - PIKA_HOST=rabbitmq
+      - PIKA_PORT=5672
+      - PIKA_USER=rmuser
+      - PIKA_PASS=rmpassword
+      - IMAGE_URL_PREDICT_ENDPOINT=http://tagging:3000/download_and_predict
+      - IMAGE_URL_PREDICT_ENDPOINT_TIMEOUT=600
+      # - IMAGE_LINK_SERVICE_ENDPOINT=
+    depends_on:
+      - rabbitmq
+      - tagging-queue

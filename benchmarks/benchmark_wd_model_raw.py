@@ -9,6 +9,7 @@ import numpy as np
 from keras.preprocessing import image
 from huggingface_hub import from_pretrained_keras
 
+
 def load_keras_tagger_hf(tagger):
     """Load tagger from huggingface"""
     return from_pretrained_keras(tagger, compile=False)
@@ -30,7 +31,7 @@ def indices_above_threshold(lst, threshold):
 def read_csv(file_path):
     """Reads a csv file columnwise"""
     data = {}
-    with open(file_path, "r", encoding='utf-8') as csv_file:
+    with open(file_path, "r", encoding="utf-8") as csv_file:
         csv_reader = csv.reader(csv_file)
         headers = next(csv_reader)
         for header in headers:

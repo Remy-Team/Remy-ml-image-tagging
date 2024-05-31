@@ -1,6 +1,12 @@
-# Remy - ML Tagging service 
+# Remy - ML Tagging service
+
+Demo UI:
 
 ![demo.gif](docs/figures/demo.gif)
+
+Queuing:
+
+![queueing.png](docs/figures/queueing.png)
 
 ## General info
 
@@ -10,7 +16,7 @@ It is served via BentoML framework. Adaptive batching has been set up.
 
 ## API description
 
-Service has a single endpoint `/predict`, which recieves a list of base64 encoded images for inference. 
+Service has a single endpoint `/predict`, which recieves a list of base64 encoded images for inference.
 
 It is strongly advised to send one image per request, due to batch size BentoML limitations and adaptive batching. Batch requests can cause unexpected behaviour.
 
@@ -19,7 +25,7 @@ curl -X 'POST' \
   'http://localhost:3000/predict' \
   -H 'accept: application/json' \
   -H 'Content-Type: multipart/form-data' \
-  -F 'imgs=@04.jpg;type=image/jpeg' 
+  -F 'imgs=@04.jpg;type=image/jpeg'
 ```
 
 Also, it has infrastructure endpoints for kubernetes endpoints (`/healthz`, `/livez`, `/readyz`) and Prometheus metrics (`/metrics`).
@@ -53,7 +59,7 @@ bentoml build -f bentofile.yaml --containerize --version 0.7
 bentoml build -f bentofile_cpu.yaml --containerize --version 0.7-cpu
 ```
 
-Output should end with 
+Output should end with
 
 ```bash
  => exporting to image                                                                                                                                                                0.2s
@@ -76,7 +82,7 @@ For your convenience, docker-compose.yml file has been provided to ease deployme
 
 ```yaml
 version: '3.8'
-services: 
+services:
   image_tagging:
     image: image_tagging:0.1
     ports:
@@ -104,22 +110,22 @@ bentoml serve --reload
 
 This will start the service with reloading on `service.py` change.
 
-### Throughput? 
+### Throughput?
 
-0.65 images per sec per worker on 1 cpu core, around 2gb per worker + 1gb during inference. 
+0.65 images per sec per worker on 1 cpu core, around 2gb per worker + 1gb during inference.
 
-### Test model performance locally? 
+### Test model performance locally?
 
 Refer to `test_suites/test_wd.py`
 
 ```bash
-CUDA_VISIBLE_DEVICES="" python test_suites/test_wd.py 
+CUDA_VISIBLE_DEVICES="" python test_suites/test_wd.py
 ```
 
 If want to use only part of your cpus, for example, to make your application utilize only the first 4 CPUs do:
 
 ```bash
-CUDA_VISIBLE_DEVICES="" taskset --cpu-list 0-3 python test_suites/test_wd.py 
+CUDA_VISIBLE_DEVICES="" taskset --cpu-list 0-3 python test_suites/test_wd.py
 ```
 
 ### Something else?

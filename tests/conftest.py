@@ -24,6 +24,7 @@ def sample_images_paths():
 def sample_image_path(sample_images_paths):
     return random.choice(sample_images_paths)
 
+
 @pytest.fixture
 def sample_image_url():
-    return 'https://upload.wikimedia.org/wikipedia/en/0/05/Hello_kitty_character_portrait.png'
+    return "https://upload.wikimedia.org/wikipedia/en/0/05/Hello_kitty_character_portrait.png"

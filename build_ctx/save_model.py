@@ -8,6 +8,7 @@ for further container build
 import bentoml
 from huggingface_hub import from_pretrained_keras
 
+
 def load_keras_tagger_hf(tagger):
     """Loads tagger from hugging_face"""
     return from_pretrained_keras(tagger, compile=False)

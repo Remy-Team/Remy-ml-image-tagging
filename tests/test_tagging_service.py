@@ -6,6 +6,7 @@ import requests
 
 from settings import SERIVCE_ENDPOINT_URL
 
+
 def requests_infer_tags_from_image(image_path) -> requests.Response:
     """Sends a single image for inference to ML service"""
     headers = {"accept": "application/json"}
@@ -17,10 +18,11 @@ def requests_infer_tags_from_image(image_path) -> requests.Response:
         response = requests.post(request_url, headers=headers, files=files)
     return response
 
+
 def requests_infer_tags_from_image_download(image_url) -> requests.Response:
     """Sends a single image for inference to ML service"""
-    headers = {"accept": "application/json", 'Content-Type': 'application/json'}
-    json_data = {'imgs_url': [image_url]}
+    headers = {"accept": "application/json", "Content-Type": "application/json"}
+    json_data = {"imgs_url": [image_url]}
     request_url = f"{SERIVCE_ENDPOINT_URL}/download_and_predict"
     return requests.post(request_url, headers=headers, json=json_data)
 
@@ -118,7 +120,6 @@ class TestTaggingService:
         """
         response = requests_infer_tags_from_image_download(sample_image_url)
         TestTaggingService._assert_correct_single_prediction_response_requests(response)
-
 
     async def test_parallel_image_inference(self, sample_images_paths):
         """

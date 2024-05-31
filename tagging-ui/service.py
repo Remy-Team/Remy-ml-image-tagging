@@ -14,6 +14,7 @@ IMAGE_TAGGING_ENDPOINT = os.getenv(
 
 st.set_page_config(page_title=PAGE_TITLE, page_icon="🖼️")
 
+
 def clear_tagging_result():
     """Clears tagging result"""
     if "tagging_result" in st.session_state:
