@@ -13,4 +13,8 @@ RUN pip3 install -r requirements.txt
 COPY *.py /app/
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
-ENTRYPOINT ["streamlit", "run", "service.py", "--server.port=80", "--server.address=0.0.0.0"]
+
+ENV HOST=0.0.0.0
+ENV PORT=80
+
+ENTRYPOINT ["sh", "-c", "streamlit run service.py --server.port=${PORT} --server.address=${HOST}"]

@@ -1,13 +1,15 @@
 services:
   tagging:
-    image: image_tagging:0.7-cpu
+    image: image_tagging:${TAGGING_CONTAINER_TAG:-0.7-cpu}
     ports:
-      - 3000:3000
+      - ${TAGGING_PORT:-3000}:${TAGGING_PORT:-3000}
     environment:
       - NUM_WORKERS=2
       - CPUS_PER_WORKER=1
       - BATCH_SIZE=4
       - BATCH_TIMEOUT=300000
+      - BENTOML_PORT=${TAGGING_PORT:-3000}
+      - BENTOML_HOST=${TAGGING_HOST:-0.0.0.0}
     deploy:
       resources:
         limits:
@@ -18,9 +20,11 @@ services:
   tagging-ui:
     build: tagging-ui
     ports:
-      - 80:80
+      - ${TAGGING_UI_PORT:-80}:${TAGGING_UI_PORT:-80}
     environment:
-      IMAGE_TAGGING_ENDPOINT: http://tagging:3000/predict
+      IMAGE_TAGGING_ENDPOINT: http://tagging:${TAGGING_PORT:-3000}/predict
+      PORT: ${TAGGING_UI_PORT:-80}
+      HOST: ${TAGGING_UI_HOST:-0.0.0.0}
 
   rabbitmq:
     image: rabbitmq:3.10.7-management
@@ -30,34 +34,35 @@ services:
     restart: always
     hostname: rabbitmq
     environment:
-      - RABBITMQ_DEFAULT_USER=rmuser
-      - RABBITMQ_DEFAULT_PASS=rmpassword
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-rmuuser}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-rmpassword}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 536870912
     volumes:
       - ./rabbitmq:/var/lib/rabbitmq
 
   tagging-queue:
     build: tagging-queue
     ports:
-      - 5000:80
+      - ${TAGGING_QUEUE_PORT:-81}:${TAGGING_QUEUE_PORT:-81}
     depends_on:
       - rabbitmq
     environment:
-      - PIKA_HOST=rabbitmq
-      - PIKA_PORT=5672
-      - PIKA_USER=rmuser
-      - PIKA_PASS=rmpassword
+      - PIKA_HOST=${PIKA_HOST:-rabbitmq}
+      - PIKA_PORT=${PIKA_PORT:-5672}
+      - PIKA_USER=${PIKA_USER:-rmuser}
+      - PIKA_PASS=${PIKA_PASS:-rmpassword}
+      - HOST=${TAGGING_QUEUE_HOST:-0.0.0.0}
+      - PORT=${TAGGING_QUEUE_PORT:-81}
 
   tagging-queue-worker:
     build: tagging-queue-worker
     environment:
-      - PIKA_HOST=rabbitmq
-      - PIKA_PORT=5672
-      - PIKA_USER=rmuser
-      - PIKA_PASS=rmpassword
-      - IMAGE_URL_PREDICT_ENDPOINT=http://tagging:3000/download_and_predict
-      - IMAGE_URL_PREDICT_ENDPOINT_TIMEOUT=600
-      # - IMAGE_LINK_SERVICE_ENDPOINT=
+      - PIKA_HOST=${PIKA_HOST:-rabbitmq}
+      - PIKA_PORT=${PIKA_PORT:-5672}
+      - PIKA_USER=${PIKA_USER:-rmuser}
+      - PIKA_PASS=${PIKA_PASS:-rmpassword}
+      - IMAGE_URL_PREDICT_ENDPOINT=http://tagging:${TAGGING_PORT:-3000}/download_and_predict
+      - IMAGE_URL_PREDICT_ENDPOINT_TIMEOUT=${IMAGE_URL_PREDICT_TIMEOUT:-900}
     depends_on:
       - rabbitmq
       - tagging-queue

@@ -100,7 +100,6 @@ CPUS_PER_WORKER = os.getenv("CPUS_PER_WORKER", "1")
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", "8"))
 BATCH_TIMEOUT = int(os.getenv("BATCH_TIMEOUT", "20000"))
 
-
 @bentoml.service(
     workers="cpu_count" if WORKERS == -1 else WORKERS,
     resources={"cpu": CPUS_PER_WORKER, "memory": "2Gi"},
@@ -170,6 +169,7 @@ class ImageTagging:
         return results
 
     @bentoml.api(
+        route='/download_and_predict',
         batchable=True,
         max_batch_size=BATCH_SIZE,
         max_latency_ms=BATCH_TIMEOUT,

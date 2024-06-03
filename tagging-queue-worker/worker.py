@@ -74,7 +74,10 @@ if __name__ == "__main__":
         pika.ConnectionParameters(
             host=PIKA_HOST,
             port=PIKA_PORT,
-            credentials=pika.PlainCredentials(username=PIKA_USER, password=PIKA_PASS),
+            credentials=pika.PlainCredentials(
+                username=PIKA_USER, 
+                password=PIKA_PASS
+            ),
             connection_attempts=2,
             retry_delay=5,
         )
